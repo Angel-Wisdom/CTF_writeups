@@ -19,7 +19,7 @@ The challenge was split into **three separate CTF tasks** on the scoreboard:
 ![alt text](<ss/Screenshot 2026-05-11 193108.png>)
 The shop exposes two obviously-named items — _1.000.000$ FLAG_ and _-10°C FLAG_ — which yield the first two flags (Parts 1 and 2). The real challenge (Part 3, **H4ck3d**) is a hidden route that exposes command execution through `./shell`.
 
-> ⚠️ **Critical meta-observation:** Part 3 (**H4ck3d**) is **completely unsolvable without the application source code**, which was only handed out as part of solving Part 1.
+> ⚠️ Part 3 (**H4ck3d**) is **completely unsolvable without the application source code**, which was only handed out as part of solving Part 1.
 
 ---
 
