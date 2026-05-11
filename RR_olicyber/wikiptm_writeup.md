@@ -9,6 +9,17 @@
 
 The challenge points to a Wikipedia-style site. Looking at the HTML source of the main page, there is a suspicious script at the bottom:
 
+![alt text](<ss/Screenshot 2026-05-11 162559.png>)
+
+The page reads a cookie named `data`, base64-decodes it, URL-decodes it, parses it as JSON, and checks if `isAdmin` is truthy.
+
+---
+
+## Identifying the Target
+
+The disambiguation page lists a link to `/Capture_the_flag.html`. Visiting it without a valid cookie returns:
+
+````
 ![```javascript
 let data = JSON.parse(decodeURIComponent(atob(document.cookie.split("=")[1])).toString());
 if (data.isAdmin) {
@@ -16,16 +27,6 @@ document.getElementById("user").innerHTML = "Admin";
 }
 
 ```](<ss/Screenshot 2026-05-11 162559.png>)
-
-The page reads a cookie named `data`, base64-decodes it, URL-decodes it, parses it as JSON, and checks if `isAdmin` is truthy.
-
----
-## Identifying the Target
-
-The disambiguation page lists a link to `/Capture_the_flag.html`. Visiting it without a valid cookie returns:
-
-```
-
 Bad Request: invalid Base64/JSON given
 
 ````
@@ -45,9 +46,9 @@ The authentication is entirely based on a user-controlled cookie with no signing
 The JS client code does:
 
 ```javascript
-btoa(encodeURIComponent('{"isAdmin": true}'))
+btoa(encodeURIComponent('{"isAdmin": true}'));
 // → JTdCJTIyaXNBZG1pbiUyMiUzQSUyMHRydWUlN0Q=
-````
+```
 
 This produces a URL-encoded then base64-encoded string. Setting this as the cookie made the browser show "Admin" in the UI, but the server rejected it:
 
