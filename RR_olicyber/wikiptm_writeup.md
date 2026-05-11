@@ -19,17 +19,12 @@ The page reads a cookie named `data`, base64-decodes it, URL-decodes it, parses 
 
 The disambiguation page lists a link to `/Capture_the_flag.html`. Visiting it without a valid cookie returns:
 
-````
-![```javascript
-let data = JSON.parse(decodeURIComponent(atob(document.cookie.split("=")[1])).toString());
-if (data.isAdmin) {
-document.getElementById("user").innerHTML = "Admin";
-}
-
-```](<ss/Screenshot 2026-05-11 162559.png>)
+```
 Bad Request: invalid Base64/JSON given
 
-````
+```
+
+![alt text](<ss/Screenshot 2026-05-11 161854.png>)
 
 This confirms the server also validates the cookie server-side before serving that page.
 
@@ -70,12 +65,14 @@ btoa('{"isAdmin": true}');
 ```
 
 Sending the request with curl:
+![alt text](<ss/Screenshot 2026-05-11 162545.png>)
 
 ```bash
 curl -b "data=eyJpc0FkbWluIjogdHJ1ZX0=" http://wikiptm.challs.olicyber.it/Capture_the_flag.html
 ```
 
 The server validated `isAdmin: true`, served the protected page, and inside the "Computer security" section the flag was printed:
+![alt text](<ss/Screenshot 2026-05-11 162529.png>)
 
 ```
 ptm{fl465_3v3rywh3r3}
