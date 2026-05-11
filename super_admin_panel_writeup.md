@@ -310,12 +310,3 @@ if __name__ == "__main__":
 
 🚩 FLAG: flag{I_L0v3_st34ling_auTOf1ll}
 ```
-
----
-
-## Key Takeaways
-
-- **Blocklist IP validation is fragile.** Blocking only `"private"` misses `"loopback"`, `"linkLocal"`, and other special ranges. The right approach is to allowlist only known-safe public ranges.
-- **nip.io bypasses hostname-based filters** without needing any redirect infrastructure — the DNS resolution itself points to the internal IP.
-- **Headless bots + password managers are a dangerous combo** when the bot visits attacker-controlled pages. It doesn't matter how strong the password is if the bot will just autofill and submit it for you.
-- **Redirect-based SSRF needs the server to be network-reachable.** If the challenge server can't reach your machine, the redirect never happens. DNS-based bypasses avoid this entirely.
