@@ -81,7 +81,7 @@ The server trusts the `User-Agent` header entirely. Simply spoof it.
 1. After inflating your wallet (same as Part 1), send the buy request with a spoofed header:
    ```http
    POST /store/<fridge_id>/buy
-   User-Agent: Samsung Smart Fridge
+   User-Agent: samsung smart fridge
    ```
 
 **Flag:** `ITASEC{A_fr0zen_USER-AGENT}`
